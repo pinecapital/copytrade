@@ -59,7 +59,6 @@ ses.headers.update({
 TOKENURL = "https://api-t1.fyers.in/api/v3/token"
 payload3 = {"fyers_id": FY_ID,
             "app_id": appid[:-4],
-            "app_id": "JPVHF6245P",
             "redirect_uri": redirect_uri,
             "appType": "100", "code_challenge": "",
             "state": "None", "scope": "", "nonce": "", "response_type": "code", "create_cookie": True}
