@@ -1,0 +1,7 @@
+config.ini
+config.json
+env10/
+fyersApi.log
+fyersOrderSocket.log
+.DS_Store
+.idea/
