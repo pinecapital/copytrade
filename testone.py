@@ -37,7 +37,7 @@ def format_symbol(symbol_data):
     """
     Formats the symbol into the desired string for searching.
     """
-    print("Original Symbol Data:", symbol_data)  # Debugging
+    # print("Original Symbol Data:", symbol_data)  # Debugging
 
     if symbol_data[7:9].isalpha():  # First format: e.g., NIFTY24FEB21500CE
         year = "20" + symbol_data[5:7]
@@ -46,11 +46,10 @@ def format_symbol(symbol_data):
         strike_price = symbol_data[10:-2]
         option_type = symbol_data[-2:]
 
-        print("Year:", year, "Month:", month_str, "Day:", last_thursday_day, "Strike Price:", strike_price, "Option Type:", option_type)  # Debugging
+        # print("Year:", year, "Month:", month_str, "Day:", last_thursday_day, "Strike Price:", strike_price, "Option Type:", option_type)  # Debugging
 
         return f"{symbol_data[:5]} {last_thursday_day:02d} {month_str} {year} {option_type} {strike_price}.00"
     else:  # Second format: e.g., NIFTY2410421500CE
-        print("Second format")
         year = "20" + symbol_data[5:7]
         month = int(symbol_data[7:8])
         day = int(symbol_data[8:10])
@@ -58,7 +57,7 @@ def format_symbol(symbol_data):
         option_type = symbol_data[-2:]
         month_str = datetime(int(year), month, 1).strftime('%b')  # Corrected line
 
-        print("Year:", year, "Month:", month_str, "Day:", day, "Strike Price:", strike_price, "Option Type:", option_type)  # Debugging
+        # print("Year:", year, "Month:", month_str, "Day:", day, "Strike Price:", strike_price, "Option Type:", option_type)  # Debugging
 
         return f"{symbol_data[:5]} {day:02d} {month_str} {year} {option_type} {strike_price}.00"
 def get_script_code(symbol, local_csv_path):
@@ -92,5 +91,5 @@ download_csv(csv_url, local_csv_path)
 # Get ScriptCode
 script_code = get_script_code("NSE:NIFTY24FEB21500CE", local_csv_path)
 sc = get_script_code("NIFTY2411621500CE", local_csv_path)
-print("ScriptCode:", script_code)
+print(script_code)
 print(sc)
