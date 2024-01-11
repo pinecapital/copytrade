@@ -3,11 +3,8 @@ import json
 from py5paisa import FivePaisaClient
 import pyotp
 from fyers_apiv3.FyersWebsocket import order_ws
-
 from ScripCodeConverter import ScripConverter
-
 from fyersTokengenerate import generate_token
-
 import logging 
 logging.basicConfig(filename='app.log', filemode='w', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%H:%M:%S', level=logging.INFO)
 # Global dictionary to store FivePaisaClient instances
@@ -39,14 +36,9 @@ def create_session_for_client(client_data):
 
     client = FivePaisaClient(cred=cred)
     client.get_totp_session(clientcode,totp_pin,pin)
-
-    # Store the client instance in the global dictionary
-    # Store the client instance and the quantity in the global dictionary
     clients[userid] = {'client': client, 'qty': qty}
 
     logging.info(f"Access token for {userid}: {client.access_token}")
-
-
 
 
 access_token, client_id = generate_token()
@@ -91,7 +83,6 @@ def onOrder(message):
             logging.error(f"Unsupported symbol format for {fyers_symbol}")
 
         
-
 
 def onerror(message):
     logging.error(f"Error: {message}")
