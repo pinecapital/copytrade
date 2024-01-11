@@ -16,6 +16,7 @@ def create_session_for_client(client_data):
     clientcode = client_data['clientcode']
     pin = client_data['pin']
     totp_secret_key = client_data['totp']
+    qty = client_data['qty']
 
     totp_pin = pyotp.TOTP(totp_secret_key).now()
 
