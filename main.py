@@ -1,122 +1,127 @@
-import configparser
-from fyers_apiv3 import fyersModel
-from datetime import datetime, timedelta, date
-from time import sleep
-import os
 import pyotp
-import requests
 import json
-import math
-import pytz
-from urllib.parse import parse_qs, urlparse
-import warnings
-import pandas as pd
-
-pd.set_option('display.max_columns', None)
-warnings.filterwarnings('ignore')
-import base64
-
-config = configparser.ConfigParser()
-config.read('config.ini')
-
-appid = config['master']['appid']
-
-secret_key = config['master']['secid']
-client_id = config['master']['client_id']
-
-redirect_uri = "https://127.0.0.1/"
-PIN = config['master']['PIN']
-TOTP_KEY = config['master']['totp']
-FY_ID = client_id
-grant_type = "authorization_code"
-response_type = "code"
-state = "sample"
-
-
-def getEncodedString(string):
-    string = str(string)
-    base64_bytes = base64.b64encode(string.encode("ascii"))
-    return base64_bytes.decode("ascii")
-
-
-URL_SEND_LOGIN_OTP = "https://api-t2.fyers.in/vagator/v2/send_login_otp_v2"
-res = requests.post(url=URL_SEND_LOGIN_OTP, json={"fy_id": getEncodedString(FY_ID), "app_id": "2"}).json()
-#
-if datetime.now().second % 30 > 27: sleep(5)
-URL_VERIFY_OTP = "https://api-t2.fyers.in/vagator/v2/verify_otp"
-res2 = requests.post(url=URL_VERIFY_OTP,
-                     json={"request_key": res["request_key"], "otp": pyotp.TOTP(TOTP_KEY).now()}).json()
-
-ses = requests.Session()
-URL_VERIFY_OTP2 = "https://api-t2.fyers.in/vagator/v2/verify_pin_v2"
-payload2 = {"request_key": res2["request_key"], "identity_type": "pin", "identifier": getEncodedString(PIN)}
-res3 = ses.post(url=URL_VERIFY_OTP2, json=payload2).json()
-
-ses.headers.update({
-    'authorization': f"Bearer {res3['data']['access_token']}"
-})
-
-TOKENURL = "https://api-t1.fyers.in/api/v3/token"
-payload3 = {"fyers_id": FY_ID,
-            "app_id": appid[:-4],
-            "redirect_uri": redirect_uri,
-            "appType": "100", "code_challenge": "",
-            "state": "None", "scope": "", "nonce": "", "response_type": "code", "create_cookie": True}
-#
-res3 = ses.post(url=TOKENURL, json=payload3).json()
-url = res3['Url']
-parsed = urlparse(url)
-auth_code = parse_qs(parsed.query)['auth_code'][0]
-
-grant_type = "authorization_code"
-
-response_type = "code"
-
-session = fyersModel.SessionModel(
-    client_id=appid,
-    secret_key=secret_key,
-    redirect_uri=redirect_uri,
-    response_type=response_type,
-    grant_type=grant_type
-)
-
-session.set_token(auth_code)
-
-response = session.generate_token()
-
-access_token = response['access_token']
-
+from py5paisa import FivePaisaClient
+import pyotp
 from fyers_apiv3.FyersWebsocket import order_ws
 
+from ScripCodeConverter import ScripConverter
+
+from fyersTokengenerate import generate_token
+
+import logging 
+logging.basicConfig(filename='app.log', filemode='w', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%H:%M:%S', level=logging.INFO)
+# Global dictionary to store FivePaisaClient instances
+clients = {}
+with open('config.json', 'r') as config_file:
+    config_data = json.load(config_file)
+def create_session_for_client(client_data):
+    appname = client_data['appname']
+    appsource = client_data['appsource']
+    userid = client_data['userid']
+    password = client_data['password']
+    userkey = client_data['userkey']
+    enckey = client_data['enckey']
+    clientcode = client_data['clientcode']
+    pin = client_data['pin']
+    totp_secret_key = client_data['totp']
+    qty = client_data['qty']
+
+    totp_pin = pyotp.TOTP(totp_secret_key).now()
+
+    cred={
+        "APP_NAME":appname,
+        "APP_SOURCE":appsource,
+        "USER_ID":userid,
+        "PASSWORD":password,
+        "USER_KEY":userkey,
+        "ENCRYPTION_KEY":enckey
+    }
+
+    client = FivePaisaClient(cred=cred)
+    client.get_totp_session(clientcode,totp_pin,pin)
+
+    # Store the client instance in the global dictionary
+    # Store the client instance and the quantity in the global dictionary
+    clients[userid] = {'client': client, 'qty': qty}
+
+    logging.info(f"Access token for {userid}: {client.access_token}")
+
+
+
+
+access_token, client_id = generate_token()
+
+csv_url = "https://openapi.5paisa.com/VendorsAPI/Service1.svc/ScripMaster/segment/All"
+converter = ScripConverter(csv_url)
 
 def onOrder(message):
-    print("Order Response:", message)
+    logging.info(f"Order Response: {message}")
+    order = message.get('orders', {})
+
+    if order.get('status') == 4:  # Check if it's a new order
+        fyers_symbol = order.get('symbol')
+        logging.info(f"fyers symbol: {fyers_symbol}")
+        # Convert to 5paisa ScripCode
+        scrip_code = converter.convert_symbol(fyers_symbol)
+
+        if scrip_code:
+            for userid, client_data in clients.items():
+                client = client_data['client']
+                qty = client_data['qty']
+
+                order_type = 'B' if order.get('side') == 1 else 'S'
+                exchange = 'N'  # Assuming NSE
+                exchange_type = 'C' if '-EQ' in fyers_symbol else 'D'  # Assuming Cash for EQ and Derivative otherwise
+                # qty = order.get('qty')
+                price = order.get('limitPrice', 0)  # Assuming 0 for market orders
+                is_intraday = order.get('productType') == 'INTRADAY'
+
+                logging.info(f"Placing order in 5paisa: OrderType={order_type}, Exchange={exchange}, ExchangeType={exchange_type}, ScripCode={scrip_code}, Qty={qty}, Price={price}, IsIntraday={is_intraday}")
+
+                try:
+                    # Use ScripCode instead of ScripData
+                    response = client.place_order(OrderType=order_type, Exchange=exchange, ExchangeType=exchange_type,
+                                                ScripCode=int(scrip_code), Qty=int(qty), Price=float(price),
+                                                IsIntraday=bool(is_intraday), StoplossPrice=0)
+                    logging.info(f"Order response from 5paisa for {userid}: {response}")
+
+                except Exception as e:
+                    logging.error(f"Error placing order in 5paisa: {e}")
+        else:
+            logging.error(f"Unsupported symbol format for {fyers_symbol}")
+
+        
 
 
 def onerror(message):
-    print("Error:", message)
-
+    logging.error(f"Error: {message}")
 
 def onclose(message):
-    print("Connection closed:", message)
-
-
+    logging.info(f"Connection closed: {message}")
 def onopen():
     data_type = "OnOrders"
 
     fyers.subscribe(data_type=data_type)
     fyers.keep_running()
 
+if __name__ == '__main__':
+    # Create a session for each client in parallel
+    with open('config.json', 'r') as config_file:
+        config_data = json.load(config_file)
 
-access_token = f"{client_id}:{access_token}"
-fyers = order_ws.FyersOrderSocket(
-    access_token=access_token,
-    write_to_file=False,
-    log_path="",
-    on_connect=onopen,
-    on_close=onclose,
-    on_error=onerror,
-    on_orders=onOrder,
-)
+    # Create a session for each client
+    for client_data in config_data.values():
+        create_session_for_client(client_data)
+    
+    access_token = f"{client_id}:{access_token}"
+    fyers = order_ws.FyersOrderSocket(
+        access_token=access_token,
+        write_to_file=False,
+        log_path="",
+        on_connect=onopen,
+        on_close=onclose,
+        on_error=onerror,
+        on_orders=onOrder,
+    )
 
-fyers.connect()
+    fyers.connect()
