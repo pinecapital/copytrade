@@ -9,3 +9,4 @@ env/
 local_scrip_master.csv
 totptest.py
 app.log
+__pycache__/
