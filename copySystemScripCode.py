@@ -11,6 +11,8 @@ from ScripCodeConverter import ScripConverter
 
 from fyersTokengenerate import generate_token
 
+import logging 
+logging.basicConfig(filename='app.log', filemode='w', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%H:%M:%S', level=logging.INFO)
 # Global dictionary to store FivePaisaClient instances
 clients = {}
 with open('config.json', 'r') as config_file:
@@ -45,7 +47,8 @@ def create_session_for_client(client_data):
     # Store the client instance and the quantity in the global dictionary
     clients[userid] = {'client': client, 'qty': qty}
 
-    print(f"Access token for {userid}: {client.access_token}")
+    logging.info(f"Access token for {userid}: {client.access_token}")
+
 
 
 
@@ -55,12 +58,12 @@ csv_url = "https://openapi.5paisa.com/VendorsAPI/Service1.svc/ScripMaster/segmen
 converter = ScripConverter(csv_url)
 
 def onOrder(message):
-    print("Order Response:", message)
+    logging.info(f"Order Response: {message}")
     order = message.get('orders', {})
 
     if order.get('status') == 4:  # Check if it's a new order
         fyers_symbol = order.get('symbol')
-        print(f"fyers symbol:{fyers_symbol}")
+        logging.info(f"fyers symbol: {fyers_symbol}")
         # Convert to 5paisa ScripCode
         scrip_code = converter.convert_symbol(fyers_symbol)
 
@@ -76,26 +79,28 @@ def onOrder(message):
                 price = order.get('limitPrice', 0)  # Assuming 0 for market orders
                 is_intraday = order.get('productType') == 'INTRADAY'
 
-                print(f"Placing order in 5paisa: OrderType={order_type}, Exchange={exchange}, ExchangeType={exchange_type}, ScripCode={scrip_code}, Qty={qty}, Price={price}, IsIntraday={is_intraday}")
+                logging.info(f"Placing order in 5paisa: OrderType={order_type}, Exchange={exchange}, ExchangeType={exchange_type}, ScripCode={scrip_code}, Qty={qty}, Price={price}, IsIntraday={is_intraday}")
 
                 try:
                     # Use ScripCode instead of ScripData
                     response = client.place_order(OrderType=order_type, Exchange=exchange, ExchangeType=exchange_type,
                                                 ScripCode=int(scrip_code), Qty=int(qty), Price=float(price),
                                                 IsIntraday=bool(is_intraday), StoplossPrice=0)
-                    print(f"Order response from 5paisa for {userid}: {response}")
-                except Exception as e:
-                    print(f"Error placing order in 5paisa: {e}")
-        else:
-            print(f"Unsupported symbol format for {fyers_symbol}")
+                    logging.info(f"Order response from 5paisa for {userid}: {response}")
 
-        print(f"Order placement attempted in 5paisa for {scrip_code}")
+                except Exception as e:
+                    logging.error(f"Error placing order in 5paisa: {e}")
+        else:
+            logging.error(f"Unsupported symbol format for {fyers_symbol}")
+
+        
 
 
 def onerror(message):
-    print("Error:", message)
+    logging.error(f"Error: {message}")
+
 def onclose(message):
-    print("Connection closed:", message)
+    logging.info(f"Connection closed: {message}")
 def onopen():
     data_type = "OnOrders"
 
