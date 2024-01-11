@@ -1,7 +1,5 @@
-from time import sleep
 import pyotp
 import json
-from urllib.parse import parse_qs, urlparse
 import warnings
 import pandas as pd
 import json
@@ -9,15 +7,13 @@ from py5paisa import FivePaisaClient
 import pyotp
 from fyers_apiv3.FyersWebsocket import order_ws
 
-from ScripCodeConverter import ScripConverter, convert_to_5paisa_symbol
+from ScripCodeConverter import ScripConverter
 
 from fyersTokengenerate import generate_token
 #logging.basicConfig(level=logging.DEBUG)
 
 pd.set_option('display.max_columns', None)
 warnings.filterwarnings('ignore')
-import base64
-
 
 with open('config.json', 'r') as config_file:
     config_data = json.load(config_file)
