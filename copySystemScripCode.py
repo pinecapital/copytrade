@@ -1,8 +1,5 @@
 import pyotp
 import json
-import warnings
-import pandas as pd
-import json
 from py5paisa import FivePaisaClient
 import pyotp
 from fyers_apiv3.FyersWebsocket import order_ws
