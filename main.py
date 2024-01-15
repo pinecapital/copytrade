@@ -46,22 +46,13 @@ access_token, client_id = generate_token()
 csv_url = "https://openapi.5paisa.com/VendorsAPI/Service1.svc/ScripMaster/segment/All"
 converter = ScripConverter(csv_url)
 
-# Global variable to store the last processed orderNumStatus
-last_order_num_status = None
+
 def onOrder(message):
     logging.info(f"Order Response: {message}")
     order = message.get('orders', {})
     # Get the orderNumStatus from the order
-    current_order_num_status = order.get('orderNumStatus')
-     # If the orderNumStatus is the same as the last processed order, skip this order
-    if current_order_num_status == last_order_num_status:
-        logging.info(f"Skipping order with same orderNumStatus: {current_order_num_status}")
-        return
-    # Update the last_order_num_status with the current_order_num_status
-    last_order_num_status = current_order_num_status
 
-
-    if order.get('status') == 4:  # Check if it's a new order
+    if order.get('status') == 6:  # Check if it's a new order
         fyers_symbol = order.get('symbol')
         logging.info(f"fyers symbol: {fyers_symbol}")
         # Convert to 5paisa ScripCode
