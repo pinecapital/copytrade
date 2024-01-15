@@ -111,6 +111,7 @@ if __name__ == '__main__':
         access_token=access_token,
         write_to_file=False,
         log_path="",
+        reconnect=True,
         on_connect=onopen,
         on_close=onclose,
         on_error=onerror,
