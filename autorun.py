@@ -13,7 +13,7 @@ class FileChangeHandler(FileSystemEventHandler):
         self.script = script
         self.process = subprocess.Popen(f'python3 {self.script}', shell=True)
         self.scheduler = BackgroundScheduler(timezone='Asia/Kolkata')
-        self.scheduler.add_job(self.restart_script, 'cron', hour=13, minute=00)
+        self.scheduler.add_job(self.restart_script, 'cron', hour=13, minute=6)
         self.scheduler.start()
 
     def on_modified(self, event):
@@ -23,7 +23,7 @@ class FileChangeHandler(FileSystemEventHandler):
 
     def restart_script(self):
         os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)  # send SIGTERM to the process group
-        self.process = subprocess.Popen(f'python3 {self.script}', shell=True, preexec_fn=os.setsid)
+        self.process = subprocess.Popen(f'python3 {self.script}', shell=True)
 if __name__ == "__main__":
     filename = 'config.json'
     script = 'main.py'
