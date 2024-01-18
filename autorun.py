@@ -5,6 +5,7 @@ from watchdog.observers import Observer
 from watchdog.events import FileSystemEventHandler
 from apscheduler.schedulers.background import BackgroundScheduler
 from pytz import timezone
+import signal
 
 class FileChangeHandler(FileSystemEventHandler):
     def __init__(self, filename, script):
@@ -21,9 +22,8 @@ class FileChangeHandler(FileSystemEventHandler):
             self.restart_script()
 
     def restart_script(self):
-        self.process.kill()
+        os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)  # send SIGTERM to the process group
         self.process = subprocess.Popen(f'python3 {self.script}', shell=True, preexec_fn=os.setsid)
-
 if __name__ == "__main__":
     filename = 'config.json'
     script = 'main.py'
