@@ -12,7 +12,7 @@ class FileChangeHandler(FileSystemEventHandler):
         self.script = script
         self.process = subprocess.Popen(f'python3 {self.script}', shell=True)
         self.scheduler = BackgroundScheduler(timezone='Asia/Kolkata')
-        self.scheduler.add_job(self.restart_script, 'cron', hour=12, minute=40)
+        self.scheduler.add_job(self.restart_script, 'cron', hour=12, minute=50)
         self.scheduler.start()
 
     def on_modified(self, event):
@@ -22,7 +22,7 @@ class FileChangeHandler(FileSystemEventHandler):
 
     def restart_script(self):
         self.process.kill()
-        self.process = subprocess.Popen(f'python3 {self.script}', shell=True)
+        self.process = subprocess.Popen(f'python3 {self.script}', shell=True, preexec_fn=os.setsid)
 
 if __name__ == "__main__":
     filename = 'config.json'
