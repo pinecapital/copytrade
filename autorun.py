@@ -10,7 +10,7 @@ class FileChangeHandler(FileSystemEventHandler):
     def __init__(self, filename, script):
         self.filename = filename
         self.script = script
-        self.process = subprocess.Popen(['python', self.script], shell=True)
+        self.process = subprocess.Popen(['python3', self.script], shell=True)
         self.scheduler = BackgroundScheduler(timezone='Asia/Kolkata')
         self.scheduler.add_job(self.restart_script, 'cron', hour=8)
         self.scheduler.start()
@@ -22,7 +22,7 @@ class FileChangeHandler(FileSystemEventHandler):
 
     def restart_script(self):
         self.process.kill()
-        self.process = subprocess.Popen(['python', self.script], shell=True)
+        self.process = subprocess.Popen(['python3', self.script], shell=True)
 
 if __name__ == "__main__":
     filename = 'config.json'
