@@ -11,7 +11,7 @@ class FileChangeHandler(FileSystemEventHandler):
     def __init__(self, filename, script):
         self.filename = filename
         self.script = script
-        self.process = subprocess.Popen(f'python3 {self.script}', shell=True)
+        self.process = subprocess.Popen(['./run.sh'])
         self.scheduler = BackgroundScheduler(timezone='Asia/Kolkata')
         self.scheduler.add_job(self.restart_script, 'cron', hour=13, minute=9)
         self.scheduler.start()
@@ -20,10 +20,11 @@ class FileChangeHandler(FileSystemEventHandler):
         if not event.is_directory and event.src_path.endswith(self.filename):
             print(f"{self.filename} has changed, restarting {self.script}")
             self.restart_script()
+
     def restart_script(self):
-        os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)  # send SIGTERM to the process group
+        self.process.terminate()  # terminate the shell script
         self.process.wait()  # wait for the process to terminate
-        self.process = subprocess.Popen(f'python3 {self.script}', shell=True)
+        self.process = subprocess.Popen(['./run.sh'])  # start the shell script again
 if __name__ == "__main__":
     filename = 'config.json'
     script = 'main.py'
