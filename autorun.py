@@ -13,7 +13,7 @@ class FileChangeHandler(FileSystemEventHandler):
         self.script = script
         self.process = subprocess.Popen(['./run.sh'])
         self.scheduler = BackgroundScheduler(timezone='Asia/Kolkata')
-        self.scheduler.add_job(self.restart_script, 'cron', hour=13, minute=32)
+        self.scheduler.add_job(self.restart_script, 'cron', hour=13, minute=38)
         self.scheduler.start()
 
     def on_modified(self, event):
@@ -22,8 +22,8 @@ class FileChangeHandler(FileSystemEventHandler):
             self.restart_script()
 
     def restart_script(self):
-        os.kill(self.process.pid, signal.SIGINT)  # send SIGINT to the process
-        self.process.wait()  # wait for the process to terminate
+        os.killpg(os.getpgid(self.process.pid), signal.SIGTERM)  # send SIGTERM to the process group
+        self.process.wait()  # wait for the process to terminat
         self.process = subprocess.Popen(['./run.sh'])  # start the shell script again
 if __name__ == "__main__":
     filename = 'config.json'
