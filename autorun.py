@@ -13,7 +13,7 @@ class FileChangeHandler(FileSystemEventHandler):
         self.script = script
         self.process = subprocess.Popen(f'python3 {self.script}', shell=True)
         self.scheduler = BackgroundScheduler(timezone='Asia/Kolkata')
-        self.scheduler.add_job(self.restart_script, 'cron', hour=12, minute=50)
+        self.scheduler.add_job(self.restart_script, 'cron', hour=13, minute=00)
         self.scheduler.start()
 
     def on_modified(self, event):
