@@ -22,7 +22,7 @@ class FileChangeHandler(FileSystemEventHandler):
             self.restart_script()
 
     def restart_script(self):
-        self.process.terminate()  # terminate the shell script
+        os.kill(self.process.pid, signal.SIGINT)  # send SIGINT to the process
         self.process.wait()  # wait for the process to terminate
         self.process = subprocess.Popen(['./run.sh'])  # start the shell script again
 if __name__ == "__main__":
@@ -34,8 +34,7 @@ if __name__ == "__main__":
     observer.start()
 
     try:
-        while True:
-            time.sleep(1)
+        observer.join()
     except KeyboardInterrupt:
         observer.stop()
-    observer.join()
+        observer.join()
