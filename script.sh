@@ -9,6 +9,12 @@ restart_main_py() {
     python3 "$MAIN_PY_PATH" &
 }
 
+# If the first command-line argument is "restart", then restart main.py
+if [ "$1" = "restart" ]; then
+    restart_main_py
+    exit 0
+fi
+
 # Watch for modifications to config.json
 while inotifywait -e modify ./config.json; do
     restart_main_py
