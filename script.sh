@@ -9,6 +9,13 @@ restart_main_py() {
     python3 "$MAIN_PY_PATH" &
 }
 
+# Function to calculate sleep time until 8 AM
+get_sleep_time() {
+    local current_epoch=$(date +%s)
+    local target_epoch=$(date -d 'tomorrow 08:00' +%s)
+    echo $(($target_epoch - $current_epoch))
+}
+
 # If the first command-line argument is "restart", then restart main.py
 if [ "$1" = "restart" ]; then
     restart_main_py
@@ -17,5 +24,11 @@ fi
 
 # Watch for modifications to config.json
 while inotifywait -e modify ./config.json; do
+    restart_main_py
+done &
+
+# Sleep until 8 AM and then restart main.py
+while true; do
+    sleep $(get_sleep_time)
     restart_main_py
 done &
