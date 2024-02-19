@@ -6,7 +6,7 @@ MAIN_PY_PATH="./main.py"
 # Function to kill and restart main.py
 restart_main_py() {
     pkill -f "python3 $MAIN_PY_PATH"
-    python3 "$MAIN_PY_PATH" > /dev/null 2>&1 &
+    nohup python3 "$MAIN_PY_PATH" > /dev/null 2>&1 &
 }
 
 # If the first command-line argument is "restart", then restart main.py
