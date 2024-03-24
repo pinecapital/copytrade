@@ -19,13 +19,13 @@ import base64
 config = configparser.ConfigParser()
 config.read('config.ini')
 
-appid = config['alok']['appid']
+appid = config['master']['appid']
 
-secret_key = config['alok']['secid']
-client_id = config['alok']['client_id']
+secret_key = config['master']['secid']
+client_id = config['master']['client_id']
 redirect_uri = "https://127.0.0.1/"
-PIN = config['alok']['PIN']
-TOTP_KEY = config['alok']['totp']
+PIN = config['master']['PIN']
+TOTP_KEY = config['master']['totp']
 FY_ID = client_id
 grant_type = "authorization_code"
 response_type = "code"
