@@ -52,11 +52,12 @@ def onOrder(message):
     order = message.get('orders', {})
     # Get the orderNumStatus from the order
 
-    if order.get('status') == 6:  # Check if it's a new order
+    if order.get('status') == 4:  # Check if it's a new order # change to 4 for testing
         fyers_symbol = order.get('symbol')
         logging.info(f"fyers symbol: {fyers_symbol}")
         # Convert to 5paisa ScripCode
         scrip_code = converter.convert_symbol(fyers_symbol)
+        logging.info(f"5paisa scrip code: {scrip_code}")
 
         if scrip_code:
             for userid, client_data in clients.items():
