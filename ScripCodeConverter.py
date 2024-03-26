@@ -111,7 +111,9 @@ class ScripConverter:
     def convert_symbol(self, symbol):
         # Standard equity format (e.g., NSE:IDEA-EQ)
         if '-EQ' in symbol:
-            equity_symbol = symbol.split(':')[1].replace('-', '_')
+            # equity_symbol = symbol.split(':')[1].replace('-', '_')
+                    # Extract the equity symbol (e.g., "IDEA" from "NSE:IDEA-EQ")
+            equity_symbol = symbol.split(':')[1].split('-')[0]
             return self.find_scrip_code(equity_symbol, 'B', 'C')
         else:
             if ":" in symbol: 
