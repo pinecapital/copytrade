@@ -56,27 +56,32 @@ def onOrder(message):
         fyers_symbol = order.get('symbol')
         logging.info(f"fyers symbol: {fyers_symbol}")
         # Convert to 5paisa ScripCode
-        scrip_code = converter.convert_symbol(fyers_symbol)
-        logging.info(f"5paisa scrip code: {scrip_code}")
+        # scrip_code = converter.convert_symbol(fyers_symbol)
+        # logging.info(f"5paisa scrip code: {scrip_code}")
+        # Convert the Fyers symbol to the required equity symbol format
+        # Extract the part after "NSE:" and replace '-' with '_'
+        equity_symbol = fyers_symbol.split(':')[1].replace('-', '_')
+        logging.info(f"Equity symbol: {equity_symbol}")
 
-        if scrip_code:
+        if equity_symbol:
             for userid, client_data in clients.items():
                 client = client_data['client']
                 qty = client_data['qty']
 
                 order_type = 'B' if order.get('side') == 1 else 'S'
                 exchange = 'N'  # Assuming NSE
-                exchange_type = 'C' if '-EQ' in fyers_symbol else 'D'  # Assuming Cash for EQ and Derivative otherwise
+                # exchange_type = 'C' if '-EQ' in fyers_symbol else 'D'  # Assuming Cash for EQ and Derivative otherwise
+                exchange_type = 'C'
                 # qty = order.get('qty')
                 price = order.get('limitPrice', 0)  # Assuming 0 for market orders
                 is_intraday = order.get('productType') == 'INTRADAY'
 
-                logging.info(f"Placing order in 5paisa: OrderType={order_type}, Exchange={exchange}, ExchangeType={exchange_type}, ScripCode={scrip_code}, Qty={qty}, Price={price}, IsIntraday={is_intraday}")
+                logging.info(f"Placing order in 5paisa: OrderType={order_type}, Exchange={exchange}, ExchangeType={exchange_type}, ScripData={equity_symbol}, Qty={qty}, Price={price}, IsIntraday={is_intraday}")
 
                 try:
                     # Use ScripCode instead of ScripData
                     response = client.place_order(OrderType=order_type, Exchange=exchange, ExchangeType=exchange_type,
-                                                ScripCode=int(scrip_code), Qty=int(qty), Price=float(price),
+                                                ScripData=str(equity_symbol), Qty=int(qty), Price=float(price),
                                                 IsIntraday=bool(is_intraday), StoplossPrice=0)
                     logging.info(f"Order response from 5paisa for {userid}: {response}")
 
