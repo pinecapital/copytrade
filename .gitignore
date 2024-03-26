@@ -11,3 +11,5 @@ totptest.py
 app.log
 __pycache__/
 config.json.back
+testCSV.py
+notebook.ipynb
