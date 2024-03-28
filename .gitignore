@@ -13,3 +13,5 @@ __pycache__/
 config.json.back
 testCSV.py
 notebook.ipynb
+.env
+config_demo.json
