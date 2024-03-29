@@ -42,8 +42,10 @@ def list_users(update: Update, context: CallbackContext):
     query.edit_message_text(text=user_list_message)
 
 def add_user(update: Update, context: CallbackContext):
-    update.callback_query.edit_message_text('Please send the new user\'s name.')
-    return ADD_USER
+    query = update.callback_query
+    query.edit_message_text('Please send the new user\'s name.')
+    return NAME  # This will be the first state in our conversation
+
 def receive_new_user(update: Update, context: CallbackContext):
     new_user_name = update.message.text.strip()
     if new_user_name:
@@ -69,15 +71,20 @@ def button(update: Update, context: CallbackContext):
         query.edit_message_text(text='You are not authorized to perform this action.')
         return ConversationHandler.END
 
+    # Handle 'update_qty' callback data
     if query.data == 'update_qty':
         # Load the current config to display qty with user buttons
         current_config = load_config()
-        # Ask which user to update
         keyboard = [[InlineKeyboardButton(f"{user} (Current Qty: {current_config[user]['qty']})", callback_data=user)]
                     for user in current_config.keys()]
         reply_markup = InlineKeyboardMarkup(keyboard)
         query.edit_message_text(text='Select a user to update qty:', reply_markup=reply_markup)
         return SELECT_USER
+
+    # Handle 'list_users' callback data
+    elif query.data == 'list_users':
+        list_users(update, context)  # Call the list_users function to display the user list
+
 
 def select_user(update: Update, context: CallbackContext):
     query = update.callback_query
