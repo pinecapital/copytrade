@@ -65,7 +65,6 @@ def onOrder(message):
         logging.info(f"Formatted Fyers symbol: {formatted_fyers_symbol}")
 
         for userid, client_data in clients.items():
-            client = client_data['client']
             qty = client_data['qty']
             # Use clientsymbol if present, otherwise use the equity_symbol
             clientsymbol = client_data.get('clientsymbol', '').strip()
