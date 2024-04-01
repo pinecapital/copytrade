@@ -15,3 +15,5 @@ testCSV.py
 notebook.ipynb
 .env
 config_demo.json
+genTotp.py
+secgen.py

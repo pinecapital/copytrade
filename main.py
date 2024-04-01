@@ -22,6 +22,7 @@ def create_session_for_client(client_data):
     pin = client_data['pin']
     totp_secret_key = client_data['totp']
     qty = client_data['qty']
+    clientsymbol = client_data['clientsymbol']
 
     totp_pin = pyotp.TOTP(totp_secret_key).now()
 
@@ -67,6 +68,8 @@ def onOrder(message):
             for userid, client_data in clients.items():
                 client = client_data['client']
                 qty = client_data['qty']
+                # Use clientsymbol if present, otherwise use the equity_symbol
+                symbol_for_order = client_data.get('clientsymbol', '').strip() or equity_symbol
 
                 order_type = 'B' if order.get('side') == 1 else 'S'
                 exchange = 'N'  # Assuming NSE
@@ -81,7 +84,7 @@ def onOrder(message):
                 try:
                     # Use ScripCode instead of ScripData
                     response = client.place_order(OrderType=order_type, Exchange=exchange, ExchangeType=exchange_type,
-                                                ScripData=str(equity_symbol), Qty=int(qty), Price=float(price),
+                                                ScripData=str(symbol_for_order), Qty=int(qty), Price=float(price),
                                                 IsIntraday=bool(is_intraday), StoplossPrice=0)
                     logging.info(f"Order response from 5paisa for {userid}: {response}")
 
