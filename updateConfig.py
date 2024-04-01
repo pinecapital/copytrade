@@ -28,7 +28,7 @@ login_manager.init_app(app)
 def load_user(user_id):
     return users.get(user_id)
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/applogin', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         username = request.form['username']
