@@ -69,7 +69,12 @@ def onOrder(message):
                 client = client_data['client']
                 qty = client_data['qty']
                 # Use clientsymbol if present, otherwise use the equity_symbol
-                symbol_for_order = client_data.get('clientsymbol', '').strip() or equity_symbol
+                clientsymbol = client_data.get('clientsymbol', '').strip()
+                if clientsymbol:
+                    symbol_for_order = clientsymbol
+                else:
+                    symbol_for_order = equity_symbol
+
 
                 order_type = 'B' if order.get('side') == 1 else 'S'
                 exchange = 'N'  # Assuming NSE
