@@ -67,6 +67,8 @@ def onOrder(message):
         for userid, client_data in clients.items():
             qty = client_data['qty']
             # Use clientsymbol if present, otherwise use the equity_symbol
+            clientS = client_data['clientsymbol']
+            logging.info("Client Symbol manual: ", clientS)
             clientsymbol = client_data.get('clientsymbol', '').strip()
             logging.info(f"Client symbol for {userid}: {clientsymbol}")
 
