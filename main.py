@@ -80,7 +80,7 @@ def onOrder(message):
                 price = order.get('limitPrice', 0)  # Assuming 0 for market orders
                 is_intraday = order.get('productType') == 'INTRADAY'
 
-                logging.info(f"Placing order in 5paisa: OrderType={order_type}, Exchange={exchange}, ExchangeType={exchange_type}, ScripData={equity_symbol}, Qty={qty}, Price={price}, IsIntraday={is_intraday}")
+                logging.info(f"Placing order in 5paisa: OrderType={order_type}, Exchange={exchange}, ExchangeType={exchange_type}, ScripData={symbol_for_order}, Qty={qty}, Price={price}, IsIntraday={is_intraday}")
 
                 try:
                     # Use ScripCode instead of ScripData
