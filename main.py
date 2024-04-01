@@ -61,21 +61,17 @@ def onOrder(message):
         # logging.info(f"5paisa scrip code: {scrip_code}")
         # Convert the Fyers symbol to the required equity symbol format
         # Extract the part after "NSE:" and replace '-' with '_'
-        equity_symbol = fyers_symbol.split(':')[1].replace('-', '_')
-        logging.info(f"Equity symbol: {equity_symbol}")
+        formatted_fyers_symbol = fyers_symbol.split(':')[1].replace('-', '_')
+        logging.info(f"Formatted Fyers symbol: {formatted_fyers_symbol}")
 
-        if equity_symbol:
-            for userid, client_data in clients.items():
-                client = client_data['client']
-                qty = client_data['qty']
-                # Use clientsymbol if present, otherwise use the equity_symbol
-                clientsymbol = client_data.get('clientsymbol', '').strip()
-                if clientsymbol:
-                    symbol_for_order = clientsymbol
-                else:
-                    symbol_for_order = equity_symbol
+        for userid, client_data in clients.items():
+            client = client_data['client']
+            qty = client_data['qty']
+            # Use clientsymbol if present, otherwise use the equity_symbol
+            clientsymbol = client_data.get('clientsymbol', '').strip()
+            symbol_for_order = clientsymbol if clientsymbol else formatted_fyers_symbol
 
-
+            if symbol_for_order:
                 order_type = 'B' if order.get('side') == 1 else 'S'
                 exchange = 'N'  # Assuming NSE
                 # exchange_type = 'C' if '-EQ' in fyers_symbol else 'D'  # Assuming Cash for EQ and Derivative otherwise
@@ -95,8 +91,9 @@ def onOrder(message):
 
                 except Exception as e:
                     logging.error(f"Error placing order in 5paisa: {e}")
-        else:
-            logging.error(f"Unsupported symbol format for {fyers_symbol}")
+            else:
+                logging.error(f"Symbol for order is not defined for {userid}.")
+
 
         
 
