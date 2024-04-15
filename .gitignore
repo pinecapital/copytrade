@@ -12,3 +12,6 @@ app.log
 __pycache__/
 config.json.back
 symbolconvert.ipynb
+config.json.old
+testScriptDataorder.py
+testScrip.ipynb
