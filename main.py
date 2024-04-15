@@ -3,9 +3,10 @@ import json
 from py5paisa import FivePaisaClient
 import pyotp
 from fyers_apiv3.FyersWebsocket import order_ws
-from ScripCodeConverter import ScripConverter
 from fyersTokengenerate import generate_token
 import logging 
+import calendar
+
 logging.basicConfig(filename='app.log', filemode='w', format='%(asctime)s - %(name)s - %(levelname)s - %(message)s', datefmt='%H:%M:%S', level=logging.INFO)
 # Global dictionary to store FivePaisaClient instances
 clients = {}
@@ -43,8 +44,61 @@ def create_session_for_client(client_data):
 
 access_token, client_id = generate_token()
 
-csv_url = "https://openapi.5paisa.com/VendorsAPI/Service1.svc/ScripMaster/segment/All"
-converter = ScripConverter(csv_url)
+
+def last_wednesday(year, month):
+    """Find the last Wednesday of a given month."""
+    total_days = calendar.monthrange(year, month)[1]
+    for day in range(total_days, 0, -1):
+        if calendar.weekday(year, month, day) == calendar.WEDNESDAY:
+            return day
+    return None  # In case no Wednesday is found
+
+def convert_symbol(symbol):
+    """Converts stock symbols between formats and generates detailed descriptors."""
+    if not symbol.startswith("NSE:"):
+        raise ValueError("Symbol must start with 'NSE:'")
+
+    main_part = symbol[4:]  # Remove 'NSE:'
+    month_to_num = {"JAN": 1, "FEB": 2, "MAR": 3, "APR": 4, "MAY": 5, "JUN": 6,
+                    "JUL": 7, "AUG": 8, "SEP": 9, "OCT": 10, "NOV": 11, "DEC": 12}
+
+    # Attempt to determine the format by length and content analysis
+    try:
+        # Try parsing as new format first
+        if any(m in main_part for m in month_to_num):
+            # New format like 'BANKNIFTY24MAY49500CE'
+            scrip_name = main_part[:9]
+            year = "20" + main_part[9:11]
+            month_abbr = main_part[11:14].upper()
+            month = month_to_num.get(month_abbr)
+            if month is None:
+                raise ValueError(f"Invalid month abbreviation: {month_abbr}")
+            strike_price = int(main_part[14:19])
+            option_type = main_part[19:]
+            day = last_wednesday(int(year), month)
+        else:
+            # Old format like 'BANKNIFTY2452949000PE'
+            scrip_name = main_part[:9]
+            year = "20" + main_part[9:11]
+            month = int(main_part[11:12])
+            day = int(main_part[12:14])
+            strike_price = int(main_part[14:19])
+            option_type = main_part[19:]
+        
+        if day is None:
+            raise ValueError("Invalid date found in symbol.")
+
+    except ValueError as e:
+        print(f"Error parsing symbol: {e}")
+        return str(e)
+
+    # Format the output string
+    month_name = calendar.month_abbr[month]
+    formatted_date = f"{day:02d} {month_name} {year}"
+    formatted_strike_price = f"{strike_price:.2f}"
+    scrip_data = f"{scrip_name} {formatted_date} {option_type} {formatted_strike_price}_{year}{month:02d}{day:02d}_{option_type}_{strike_price}"
+
+    return scrip_data
 
 
 def onOrder(message):
@@ -55,28 +109,27 @@ def onOrder(message):
     if order.get('status') == 6:  # Check if it's a new order
         fyers_symbol = order.get('symbol')
         logging.info(f"fyers symbol: {fyers_symbol}")
-        # Convert to 5paisa ScripCode
-        scrip_code = converter.convert_symbol(fyers_symbol)
+        # Convert to 5paisa ScripData
+        scrip_data = convert_symbol(fyers_symbol)
 
-        if scrip_code:
+        if scrip_data:
             for userid, client_data in clients.items():
                 client = client_data['client']
                 qty = client_data['qty']
 
                 order_type = 'B' if order.get('side') == 1 else 'S'
                 exchange = 'N'  # Assuming NSE
-                exchange_type = 'C' if '-EQ' in fyers_symbol else 'D'  # Assuming Cash for EQ and Derivative otherwise
+                exchange_type = 'C' if '_EQ' in scrip_data else 'D'  # Assuming Cash for EQ and Derivative otherwise
                 # qty = order.get('qty')
                 price = order.get('limitPrice', 0)  # Assuming 0 for market orders
-                is_intraday = order.get('productType') == 'INTRADAY'
 
-                logging.info(f"Placing order in 5paisa: OrderType={order_type}, Exchange={exchange}, ExchangeType={exchange_type}, ScripCode={scrip_code}, Qty={qty}, Price={price}, IsIntraday={is_intraday}")
+                logging.info(f"Placing order in 5paisa: OrderType={order_type}, Exchange={exchange}, ExchangeType={exchange_type}, ScripCode={scrip_data}, Qty={qty}, Price={price}, ")
 
                 try:
                     # Use ScripCode instead of ScripData
                     response = client.place_order(OrderType=order_type, Exchange=exchange, ExchangeType=exchange_type,
-                                                ScripCode=int(scrip_code), Qty=int(qty), Price=float(price),
-                                                IsIntraday=bool(is_intraday), StoplossPrice=0)
+                                                ScripData=str(scrip_data), Qty=int(qty), Price=float(price),
+                                                IsIntraday=True, StoplossPrice=0)
                     logging.info(f"Order response from 5paisa for {userid}: {response}")
 
                 except Exception as e:
