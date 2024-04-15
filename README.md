@@ -9,4 +9,7 @@
 
 ## How to run 
 1. when first setup, run the activate 
-2. put the script in a crontab that would rerun the script everday
+2. put the script in a crontab that would rerun the script everday-
+
+
+### Scrip Data conversion
