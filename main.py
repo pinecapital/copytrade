@@ -45,6 +45,8 @@ def create_session_for_client(client_data):
 access_token, client_id = generate_token()
 
 
+import calendar
+
 def last_wednesday(year, month):
     """Find the last Wednesday of a given month."""
     total_days = calendar.monthrange(year, month)[1]
@@ -64,26 +66,34 @@ def convert_symbol(symbol):
 
     # Attempt to determine the format by length and content analysis
     try:
+        # Determine the script name based on known patterns
+        if main_part.startswith("BANKNIFTY"):
+            scrip_name = "BANKNIFTY"
+            name_length = 9
+        elif main_part.startswith("NIFTY"):
+            scrip_name = "NIFTY"
+            name_length = 5
+        else:
+            raise ValueError("Unsupported scrip name.")
+
         # Try parsing as new format first
         if any(m in main_part for m in month_to_num):
             # New format like 'BANKNIFTY24MAY49500CE'
-            scrip_name = main_part[:9]
-            year = "20" + main_part[9:11]
-            month_abbr = main_part[11:14].upper()
+            year = "20" + main_part[name_length:name_length+2]
+            month_abbr = main_part[name_length+2:name_length+5].upper()
             month = month_to_num.get(month_abbr)
             if month is None:
                 raise ValueError(f"Invalid month abbreviation: {month_abbr}")
-            strike_price = int(main_part[14:19])
-            option_type = main_part[19:]
+            strike_price = int(main_part[name_length+5:name_length+10])
+            option_type = main_part[name_length+10:]
             day = last_wednesday(int(year), month)
         else:
-            # Old format like 'BANKNIFTY2452949000PE'
-            scrip_name = main_part[:9]
-            year = "20" + main_part[9:11]
-            month = int(main_part[11:12])
-            day = int(main_part[12:14])
-            strike_price = int(main_part[14:19])
-            option_type = main_part[19:]
+            # Old format like 'NIFTY2450222000CE'
+            year = "20" + main_part[name_length:name_length+2]
+            month = int(main_part[name_length+2:name_length+3])
+            day = int(main_part[name_length+3:name_length+5])
+            strike_price = int(main_part[name_length+5:name_length+10])
+            option_type = main_part[name_length+10:]
         
         if day is None:
             raise ValueError("Invalid date found in symbol.")
