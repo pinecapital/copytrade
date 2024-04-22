@@ -132,14 +132,14 @@ def onOrder(message):
                 exchange_type = 'C' if '_EQ' in scrip_data else 'D'  # Assuming Cash for EQ and Derivative otherwise
                 # qty = order.get('qty')
                 price = order.get('limitPrice', 0)  # Assuming 0 for market orders
-
-                logging.info(f"Placing order in 5paisa: OrderType={order_type}, Exchange={exchange}, ExchangeType={exchange_type}, ScripCode={scrip_data}, Qty={qty}, Price={price}, ")
+                stopPrice = order.get('stopPrice', 0)  # Assuming 0 for market orders
+                logging.info(f"Placing order in 5paisa: OrderType={order_type}, Exchange={exchange}, ExchangeType={exchange_type}, ScripCode={scrip_data}, Qty={qty}, Price={price}, StopPrice={stopPrice}")
 
                 try:
                     # Use ScripCode instead of ScripData
                     response = client.place_order(OrderType=order_type, Exchange=exchange, ExchangeType=exchange_type,
                                                 ScripData=str(scrip_data), Qty=int(qty), Price=float(price),
-                                                IsIntraday=True, StoplossPrice=0)
+                                                IsIntraday=True, StoplossPrice=float(stopPrice))
                     logging.info(f"Order response from 5paisa for {userid}: {response}")
 
                 except Exception as e:
