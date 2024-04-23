@@ -116,7 +116,7 @@ def onOrder(message):
     order = message.get('orders', {})
     # Get the orderNumStatus from the order
 
-    if order.get('status') == 4:  # Check if it's a new order 4 for market close, 6 for new 
+    if order.get('status') == 6:  # Check if it's a new order 4 for market close, 6 for new 
         fyers_symbol = order.get('symbol')
         logging.info(f"fyers symbol: {fyers_symbol}")
         # Convert to 5paisa ScripData
